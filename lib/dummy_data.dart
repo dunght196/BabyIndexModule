@@ -1,7 +1,7 @@
 
 import 'package:mp_chart/mp/core/entry/entry.dart';
 
-import 'index_baby.dart';
+import 'model/index_baby.dart';
 
 class DummyData {
 

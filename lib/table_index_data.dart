@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'dummy_data.dart';
-import 'index_baby.dart';
+import 'model/index_baby.dart';
 
 class TableIndexDataScreen extends StatelessWidget {
 

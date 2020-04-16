@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'home.dart';
-import 'index_baby.dart';
+import 'model/index_baby.dart';
 
 class DetailIndexBabyScreen extends StatefulWidget {
   final IndexBaby indexBaby;

@@ -27,7 +27,7 @@ import 'package:mp_chart/mp/core/view_port.dart';
 import 'app_util.dart';
 import 'check_valid_guess_baby.dart';
 import 'color_util.dart';
-import 'index_baby.dart';
+import 'model/index_baby.dart';
 import 'index_baby_screen.dart';
 import 'chart_detail_fullscreen.dart';
 
