@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:babyindexmodule/bloc/child_bloc.dart';
 import 'package:babyindexmodule/model/child_response.dart';
 import 'package:babyindexmodule/state_loading_data.dart';
@@ -13,6 +11,7 @@ import 'package:mp_chart/mp/core/entry/entry.dart';
 import 'app_util.dart';
 import 'build_chart_index.dart';
 import 'dummy_data.dart';
+import 'model/child.dart';
 import 'model/index_baby.dart';
 import 'index_baby_screen.dart';
 
@@ -28,12 +27,19 @@ class _HomeState extends State<Home> {
   final tftPerimeter = TextEditingController();
   final tftDate = TextEditingController();
 
-  final databaseReference = Firestore.instance.collection('baby-index').document('cun').collection('date');
+//  final databaseReference = Firestore.instance.collection('baby-indexxx').document('cun').collection('date');
+  var databaseReference;
+  String relativeId;
+  String guuId;
+  String name;
+  String gender;
+  String birthDay;
+  List dataChild = List();
+  Entry markerBaby;
+
+//  CollectionReference databaseReference;
   DateTime _date = DateTime.now();
   var txtDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
-
-  var markerBaby = Entry();
-  var dateOfBirthBaby = "02-02-2019";
 
   QuerySnapshot querySnapshot;
   List<DocumentSnapshot> listSnapshot;
@@ -45,23 +51,16 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+
     _getDataFromNative();
 
     childBloc.getChild();
 
-    getIndexList().then((results){
+   /* getIndexList().then((results){
       setState(() {
         listSnapshot = results.documents;
       });
-    });
-
-    var date1 = DateTime.parse('2020-01-02');
-    var date2 = DateTime.parse('2020-02-02');
-    final difference = date2.difference(date1).inDays;
-    var week = num.parse((difference / 7).toStringAsFixed(2));
-    var offsetYBaby = (week/7).floor().toDouble();
-    var offsetXBaby = week - (7*offsetYBaby);
-    markerBaby = Entry(x: offsetXBaby, y: 12-offsetYBaby);
+    });*/
 
   }
 
@@ -121,6 +120,9 @@ class _HomeState extends State<Home> {
         stream: childBloc.subject.stream,
         builder: (context, AsyncSnapshot<ChildResponse> snapshot) {
           if (snapshot.hasData) {
+            dataChild.clear();
+            dataChild.addAll(snapshot.data.data);
+            _initStateChild(dataChild[0]);
             return _buildHome();
           } else if (snapshot.hasError) {
             return BuildErrorWidget('Lỗi hệ thống');
@@ -235,6 +237,40 @@ class _HomeState extends State<Home> {
     );
   }
 
+  void _initStateChild(Child child) {
+      if(child != null) {
+        guuId = child.guuId;
+        relativeId = child.relativeId;
+        name = child.name;
+        gender = child.gender;
+        birthDay = child.birthday;
+        setOffsetMarkerBaby(child.birthday);
+        //  final databaseReference = Firestore.instance.collection('baby-index').document('cun').collection('date');
+
+        databaseReference = Firestore.instance.collection(guuId).document(relativeId).collection('date');
+//        getIndexList().then((results){
+//          setState(() {
+//            listSnapshot = results.documents;
+//          });
+//        });
+//        databaseReference.getDocuments().then((result) {
+//          setState(() {
+//            listSnapshot = result.d
+//          });
+//        });
+      }
+  }
+
+  void setOffsetMarkerBaby(String birthDay) {
+    var date1 = DateTime.parse(birthDay);
+    var date2 = DateTime.now();
+    final difference = date2.difference(date1).inDays;
+    var week = num.parse((difference / 7).toStringAsFixed(2));
+    var offsetYBaby = (week/7).floor().toDouble();
+    var offsetXBaby = week - (7*offsetYBaby);
+    markerBaby = Entry(x: offsetXBaby, y: 12-offsetYBaby);
+  }
+
   Widget _buildHome() {
     return ListView(
       children: [
@@ -242,7 +278,7 @@ class _HomeState extends State<Home> {
           padding: EdgeInsets.all(23),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
+            children: [
               Padding(
                 padding: EdgeInsets.fromLTRB(12, 0, 0, 0),
                 child: Text('Bé'),
@@ -254,11 +290,11 @@ class _HomeState extends State<Home> {
                     color: Colors.grey[300],
                     borderRadius: BorderRadius.all(Radius.circular(20))),
                 child: Row(
-                  children: <Widget>[
-                    Icon(Icons.accessibility),
+                  children: [
+                    Icon(gender == 'male' ? Icons.accessibility : Icons.pregnant_woman),
                     Padding(
                       padding: const EdgeInsets.only(left: 5),
-                      child: Text('Dũng'),
+                      child: Text(name),
                     )
                   ],
                 ),
@@ -311,7 +347,7 @@ class _HomeState extends State<Home> {
             DummyData.createBelowLineWeightBoy(),
             DummyData.createTopLineWeightBoy(),
             listSnapshot,
-            dateOfBirthBaby,
+            birthDay,
           ),
         ),
         _buildLine(),
@@ -322,7 +358,7 @@ class _HomeState extends State<Home> {
             DummyData.createBelowLineHeightBoy(),
             DummyData.createTopLineHeightBoy(),
             listSnapshot,
-            dateOfBirthBaby,
+            birthDay,
           ),
         ),
         _buildLine(),
@@ -333,7 +369,7 @@ class _HomeState extends State<Home> {
             DummyData.createBelowLinePerimeterBoy(),
             DummyData.createTopLinePerimeterBoy(),
             listSnapshot,
-            dateOfBirthBaby,
+            birthDay,
           ),
         ),
       ],
@@ -469,10 +505,6 @@ class _HomeState extends State<Home> {
 
   Future<QuerySnapshot> getIndexList() async {
     return await databaseReference.getDocuments();
-  }
-
-  Future<List<ChildResponse>> getIndexResponse() async {
-      return childBloc.subject.stream.toList();
   }
 
 }

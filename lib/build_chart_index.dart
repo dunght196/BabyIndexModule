@@ -34,22 +34,22 @@ import 'chart_detail_fullscreen.dart';
 class BuildChartIndex extends StatefulWidget {
 
   final String title;
-  final String dateOfBirth;
+  final String birthDay;
   final List<Entry> dataBelowLine;
   final List<Entry> dataTopLine;
   final List<DocumentSnapshot> snapShot;
 
-  BuildChartIndex(this.title, this.dataBelowLine, this.dataTopLine, this.snapShot, this.dateOfBirth);
+  BuildChartIndex(this.title, this.dataBelowLine, this.dataTopLine, this.snapShot, this.birthDay);
 
   @override
   State<StatefulWidget> createState() {
-    return _BuildChartIndexState(title, dataBelowLine, dataTopLine, snapShot, dateOfBirth);
+    return _BuildChartIndexState(title, dataBelowLine, dataTopLine, snapShot, birthDay);
   }
 }
 
 class _BuildChartIndexState extends State<BuildChartIndex> {
   final String title;
-  final String dateOfBirth;
+  final String birthDay;
   final List<Entry> dataBelowLine;
   final List<Entry> dataTopLine;
   LineChartController lineChartController;
@@ -57,7 +57,7 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
   List<Entry> dataIndex = List();
   List<Entry> dataGuess = List();
 
-  _BuildChartIndexState(this.title, this.dataBelowLine, this.dataTopLine, this.snapShot, this.dateOfBirth);
+  _BuildChartIndexState(this.title, this.dataBelowLine, this.dataTopLine, this.snapShot, this.birthDay);
 
   @override
   void initState() {
@@ -466,7 +466,7 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
   }
 
   double getMonthIndex(String dateIndex) {
-    var date1 = getValidDateFormat(dateOfBirth);
+    var date1 = DateTime.parse(birthDay);
     var date2 = getValidDateFormat(dateIndex);
     final difference = date2.difference(date1).inDays;
     return num.parse((difference / 30).toStringAsFixed(1));
