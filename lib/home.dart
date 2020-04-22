@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:babyindexmodule/bloc/child_bloc.dart';
 import 'package:babyindexmodule/model/child_response.dart';
 import 'package:babyindexmodule/state_loading_data.dart';
+import 'package:babyindexmodule/util/string.dart';
 import 'package:babyindexmodule/wonderweek_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,15 +11,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mp_chart/mp/core/entry/entry.dart';
-import 'app_util.dart';
+import 'util/app_util.dart';
 import 'build_chart_index.dart';
 import 'dummy_data.dart';
 import 'model/child.dart';
 import 'model/index_baby.dart';
 import 'index_baby_screen.dart';
 
+enum StateChild {LOADING, SUCCESS, ERROR, EMTY}
+
 class Home extends StatefulWidget {
   static final heightTextField = 40.0;
+
   @override
   _HomeState createState() => _HomeState();
 }
@@ -27,55 +33,29 @@ class _HomeState extends State<Home> {
   final tftPerimeter = TextEditingController();
   final tftDate = TextEditingController();
 
-//  final databaseReference = Firestore.instance.collection('baby-indexxx').document('cun').collection('date');
-  var databaseReference;
   String relativeId;
   String guuId;
   String name;
   String gender;
   String birthDay;
-  List dataChild = List();
+  List<Child> dataChild = List();
   Entry markerBaby;
 
-//  CollectionReference databaseReference;
+  var _stateChild = StateChild.LOADING;
+  var databaseReference;
   DateTime _date = DateTime.now();
   var txtDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
-
-  QuerySnapshot querySnapshot;
-  List<DocumentSnapshot> listSnapshot;
-
+  List<DocumentSnapshot> listSnapshot = List();
+  ChildResponse _childResponse;
   String _accessToken = "";
-  static const MethodChannel methodChannel =
-  MethodChannel('flutter.io/baby');
+
+  static const MethodChannel methodChannel = MethodChannel('flutter.io/baby');
+  StreamController<Entry> _controllerStream = StreamController<Entry>.broadcast();
 
   @override
   void initState() {
     super.initState();
-
-    _getDataFromNative();
-
-    childBloc.getChild();
-
-   /* getIndexList().then((results){
-      setState(() {
-        listSnapshot = results.documents;
-      });
-    });*/
-
-  }
-
-  Future<void> _getDataFromNative() async {
-    String accesToken;
-    try {
-      final String result = await methodChannel.invokeMethod('getDataFromNative');
-      accesToken = result;
-      debugPrint("Acesstoke: $accesToken");
-    } on PlatformException catch (e){
-      debugPrint("Error get data from native: $e");
-    }
-    setState(() {
-      if(accesToken != null ) _accessToken = accesToken;
-    });
+    runMultipleFutures();
   }
 
   @override
@@ -116,159 +96,23 @@ class _HomeState extends State<Home> {
           )
         ],
       ),
-      body: StreamBuilder(
-        stream: childBloc.subject.stream,
-        builder: (context, AsyncSnapshot<ChildResponse> snapshot) {
-          if (snapshot.hasData) {
-            dataChild.clear();
-            dataChild.addAll(snapshot.data.data);
-            _initStateChild(dataChild[0]);
-            return _buildHome();
-          } else if (snapshot.hasError) {
-            return BuildErrorWidget('Lỗi hệ thống');
-          } else {
-            return BuildLoadingWidget();
-          }
-        },
-      ),
-//      body: ListView(
-//        children: [
-//          Padding(
-//            padding: EdgeInsets.all(23),
-//            child: Column(
-//              crossAxisAlignment: CrossAxisAlignment.start,
-//              children: <Widget>[
-//                Padding(
-//                  padding: EdgeInsets.fromLTRB(12, 0, 0, 0),
-//                  child: Text('Bé'),
-//                ),
-//                Container(
-//                  padding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-//                  height: Home.heightTextField,
-//                  decoration: BoxDecoration(
-//                      color: Colors.grey[300],
-//                      borderRadius: BorderRadius.all(Radius.circular(20))),
-//                  child: Row(
-//                    children: <Widget>[
-//                      Icon(Icons.accessibility),
-//                      Padding(
-//                        padding: const EdgeInsets.only(left: 5),
-//                        child: Text('Dũng'),
-//                      )
-//                    ],
-//                  ),
-//                ),
-//                Padding(
-//                  padding: EdgeInsets.fromLTRB(12, 20, 0, 0),
-//                  child: Text('Cân nặng'),
-//                ),
-//                _buidFormIndex('kg', tftWeight),
-//                Padding(
-//                  padding: EdgeInsets.fromLTRB(12, 20, 0, 0),
-//                  child: Text('Chiều cao'),
-//                ),
-//                _buidFormIndex("cm", tftHeight),
-//                Padding(
-//                  padding: EdgeInsets.fromLTRB(12, 20, 0, 0),
-//                  child: Text('Chu vi đầu'),
-//                ),
-//                _buidFormIndex("cm", tftPerimeter),
-//                Padding(
-//                  padding: EdgeInsets.fromLTRB(12, 20, 0, 0),
-//                  child: Text('Ngày'),
-//                ),
-//                Padding(
-//                  padding: const EdgeInsets.only(bottom: 20),
-//                  child: _buildFormDate(),
-//                ),
-//                SizedBox(
-//                  height: 50,
-//                  width: double.infinity,
-//                  child: GestureDetector(
-//                    onTap: () {
-//                      addIndexBaby(context);
-//                    },
-//                    child: RaisedButton(
-//                      child: Text('Thêm'),
-//                    ),
-//                  ),
-//                ),
-//              ],
-//            ),
-//          ),
-//          _buildLine(),
-//          _buildWonderWeek(),
-//          _buildLine(),
-//          Padding(
-//            padding: EdgeInsets.only(top: 10),
-//            child: BuildChartIndex(
-//                AppUtil.WEIGHT,
-//                DummyData.createBelowLineWeightBoy(),
-//                DummyData.createTopLineWeightBoy(),
-//                listSnapshot,
-//                dateOfBirthBaby,
-//            ),
-//          ),
-//          _buildLine(),
-//          Padding(
-//            padding: EdgeInsets.only(top: 10),
-//            child: BuildChartIndex(
-//              AppUtil.HEIGHT,
-//              DummyData.createBelowLineHeightBoy(),
-//              DummyData.createTopLineHeightBoy(),
-//              listSnapshot,
-//              dateOfBirthBaby,
-//            ),
-//          ),
-//          _buildLine(),
-//          Padding(
-//            padding: EdgeInsets.only(top: 10, bottom: 10),
-//            child: BuildChartIndex(
-//              AppUtil.PERIMETER,
-//              DummyData.createBelowLinePerimeterBoy(),
-//              DummyData.createTopLinePerimeterBoy(),
-//              listSnapshot,
-//              dateOfBirthBaby,
-//            ),
-//          ),
-//        ],
-//      ),
-      // body is the majority of the screen.
+//      body: isLoading ? BuildLoadingWidget() : _buildHome(),
+      body: widgetBuilder(),
     );
   }
 
-  void _initStateChild(Child child) {
-      if(child != null) {
-        guuId = child.guuId;
-        relativeId = child.relativeId;
-        name = child.name;
-        gender = child.gender;
-        birthDay = child.birthday;
-        setOffsetMarkerBaby(child.birthday);
-        //  final databaseReference = Firestore.instance.collection('baby-index').document('cun').collection('date');
-
-        databaseReference = Firestore.instance.collection(guuId).document(relativeId).collection('date');
-//        getIndexList().then((results){
-//          setState(() {
-//            listSnapshot = results.documents;
-//          });
-//        });
-//        databaseReference.getDocuments().then((result) {
-//          setState(() {
-//            listSnapshot = result.d
-//          });
-//        });
-      }
-  }
-
-  void setOffsetMarkerBaby(String birthDay) {
-    var date1 = DateTime.parse(birthDay);
-    var date2 = DateTime.now();
-    final difference = date2.difference(date1).inDays;
-    var week = num.parse((difference / 7).toStringAsFixed(2));
-    var offsetYBaby = (week/7).floor().toDouble();
-    var offsetXBaby = week - (7*offsetYBaby);
-    markerBaby = Entry(x: offsetXBaby, y: 12-offsetYBaby);
+  Widget widgetBuilder() {
+    if(_stateChild == StateChild.LOADING) {
+      return BuildLoadingWidget();
+    }else if(_stateChild == StateChild.SUCCESS) {
+      return _buildHome();
+    }else if(_stateChild == StateChild.EMTY) {
+      return Center(
+        child: RaisedButton(child: Text('Thêm bé mới'),),
+      );
+    }else {
+      return Center(child: Text('Đã có lỗi xảy ra'),);
+    }
   }
 
   Widget _buildHome() {
@@ -294,7 +138,12 @@ class _HomeState extends State<Home> {
                     Icon(gender == 'male' ? Icons.accessibility : Icons.pregnant_woman),
                     Padding(
                       padding: const EdgeInsets.only(left: 5),
-                      child: Text(name),
+                      child: GestureDetector(
+                          onTap: () {
+                            _showDropdownChild();
+                          },
+                          child: Text(name)
+                      ),
                     )
                   ],
                 ),
@@ -343,7 +192,7 @@ class _HomeState extends State<Home> {
         Padding(
           padding: EdgeInsets.only(top: 10),
           child: BuildChartIndex(
-            AppUtil.WEIGHT,
+            Strings.WEIGHT,
             DummyData.createBelowLineWeightBoy(),
             DummyData.createTopLineWeightBoy(),
             listSnapshot,
@@ -354,7 +203,7 @@ class _HomeState extends State<Home> {
         Padding(
           padding: EdgeInsets.only(top: 10),
           child: BuildChartIndex(
-            AppUtil.HEIGHT,
+            Strings.HEIGHT,
             DummyData.createBelowLineHeightBoy(),
             DummyData.createTopLineHeightBoy(),
             listSnapshot,
@@ -365,7 +214,7 @@ class _HomeState extends State<Home> {
         Padding(
           padding: EdgeInsets.only(top: 10, bottom: 10),
           child: BuildChartIndex(
-            AppUtil.PERIMETER,
+            Strings.PERIMETER,
             DummyData.createBelowLinePerimeterBoy(),
             DummyData.createTopLinePerimeterBoy(),
             listSnapshot,
@@ -463,15 +312,15 @@ class _HomeState extends State<Home> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 12, top: 12),
+          padding: EdgeInsets.only(left: 12, top: 12),
           child: Text('Wonder Week',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         ),
         Padding(
-          padding: const EdgeInsets.only(left: 12, top: 10),
+          padding: EdgeInsets.only(left: 12, top: 10),
           child: Text('Thời điểm nhõng nhẽo của trẻ'),
         ),
-        BuildWonderWeek(markerBaby: markerBaby,),
+        BuildWonderWeek(markerBaby, _controllerStream),
         BuildNoteWonderWeek(),
       ],
     );
@@ -503,8 +352,114 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Future<QuerySnapshot> getIndexList() async {
-    return await databaseReference.getDocuments();
+  Future<List<DocumentSnapshot>> getIndexList() async {
+    QuerySnapshot querySnapshot = await databaseReference.getDocuments();
+    return querySnapshot.documents;
   }
 
+  Future runMultipleFutures() async {
+    var futures = List<Future>();
+    futures.add(_getDataFromNative());
+    futures.add(_initStateChild());
+    await Future.wait(futures);
+  }
+
+  Entry getOffsetMarkerBaby(String birthDay) {
+    var date1 = DateTime.parse(birthDay);
+    var date2 = DateTime.now();
+    final difference = date2.difference(date1).inDays;
+    var week = num.parse((difference / 7).toStringAsFixed(2));
+    var offsetYBaby = (week/7).floor().toDouble();
+    var offsetXBaby = week - (7*offsetYBaby);
+    return Entry(x: offsetXBaby, y: 12-offsetYBaby);
+  }
+
+  Future _getDataFromNative() async {
+    String accesToken;
+    try {
+      final String result = await methodChannel.invokeMethod('getDataFromNative');
+      accesToken = result;
+      debugPrint("Acesstoke: $accesToken");
+    } on PlatformException catch (e){
+      debugPrint("Error get data from native: $e");
+    }
+    setState(() {
+      if(accesToken != null ) {
+        _accessToken = accesToken;
+        AppUtil.setGuuToken(_accessToken);
+        debugPrint("Token send: $_accessToken");
+      }
+    });
+  }
+
+  Future _initStateChild() async {
+    childBloc.getChild().then((results){
+      setState(() {
+        _childResponse = results;
+        if(_childResponse != null && _childResponse.data.isNotEmpty) {
+          dataChild.clear();
+          dataChild.addAll(_childResponse.data);
+          Child child = dataChild[0];
+          guuId = child.guuId;
+          relativeId = child.relativeId;
+          name = child.name;
+          gender = child.gender;
+          birthDay = child.birthday;
+          markerBaby = getOffsetMarkerBaby(birthDay);
+          AppUtil.setGuuId(guuId);
+          AppUtil.setRelativeId(relativeId);
+          // Get data chart
+          databaseReference = Firestore.instance.collection(guuId).document(relativeId).collection('date');
+          getIndexList().then((results){
+            setState(() {
+              listSnapshot.clear();
+              listSnapshot.addAll(results);
+              _stateChild = StateChild.SUCCESS;
+            });
+          });
+        }else if(_childResponse != null && _childResponse.data.isEmpty) {
+          setState(() {
+            _stateChild = StateChild.EMTY;
+          });
+        }else {
+          setState(() {
+            _stateChild = StateChild.ERROR;
+          });
+        }
+      });
+    });
+  }
+
+  _showDropdownChild() async {
+    final result = await showMenu(
+        context: context,
+        position: RelativeRect.fromLTRB(65, 150, 100, 100),
+        items: dataChild.map((item) =>
+            PopupMenuItem<Child>(
+              child: Text(item.name), value: item,
+            )
+        ).toList()
+    );
+
+    if(result != null) {
+      setState(() {
+        guuId = result.guuId;
+        relativeId = result.relativeId;
+        name = result.name;
+        gender = result.gender;
+        birthDay = result.birthday;
+        markerBaby = getOffsetMarkerBaby(birthDay);
+        _controllerStream.add(markerBaby);
+        AppUtil.setGuuId(guuId);
+        AppUtil.setRelativeId(relativeId);
+        databaseReference = Firestore.instance.collection(guuId).document(relativeId).collection('date');
+        getIndexList().then((results){
+          setState(() {
+            listSnapshot.clear();
+            listSnapshot.addAll(results);
+          });
+        });
+      });
+    }
+  }
 }

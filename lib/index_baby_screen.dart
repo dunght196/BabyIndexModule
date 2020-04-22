@@ -1,3 +1,5 @@
+import 'package:babyindexmodule/home.dart';
+import 'package:babyindexmodule/util/app_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -6,12 +8,31 @@ import 'detail_indexbaby_screen.dart';
 import 'model/index_baby.dart';
 
 class IndexBabyScreen extends StatefulWidget {
-  @override
   _IndexBabyState createState() => _IndexBabyState();
 }
 
 class _IndexBabyState extends State<IndexBabyScreen> {
-  final databaseReference = Firestore.instance;
+   var databaseReference = Firestore.instance;
+   String _guuId;
+   String _relativeId;
+
+   bool isLoading = true;
+
+   @override
+  void initState() {
+    super.initState();
+    initData();
+  }
+
+  initData() async {
+     String guuId = await AppUtil.getGuuId();
+     String relativeId = await AppUtil.getRelativeId();
+     setState(() {
+       _guuId = guuId;
+       _relativeId = relativeId;
+       isLoading = false;
+     });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +52,7 @@ class _IndexBabyState extends State<IndexBabyScreen> {
 
   Widget _buildBody() {
     return Column(
-      children: <Widget>[
+      children: [
         Container(
           color: Colors.blue[100],
           height: 65,
@@ -46,11 +67,7 @@ class _IndexBabyState extends State<IndexBabyScreen> {
           ),
         ),
         StreamBuilder(
-          stream: databaseReference
-              .collection('baby')
-              .document('cun')
-              .collection('date')
-              .snapshots(),
+          stream: isLoading ? Stream.empty() : databaseReference.collection(_guuId).document(_relativeId).collection('date').snapshots() ,
           builder: (context, snapshot) {
             if (!snapshot.hasData) return LinearProgressIndicator();
             return _buildList(context, snapshot.data.documents);
@@ -62,9 +79,6 @@ class _IndexBabyState extends State<IndexBabyScreen> {
 
   Widget _buildList(BuildContext context, List<DocumentSnapshot> snapshot) {
     return Expanded(
-//      child: ListView(
-//        children: snapshot.map((data) => _buildListItem(context, data, snapshot.elementAt(snapshot.indexOf(data)), snapshot.)).toList(),
-//      ),
         child: ListView.builder(
             itemCount: snapshot.length,
             itemBuilder: (BuildContext context, int index) {

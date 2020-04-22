@@ -1,12 +1,15 @@
 import 'package:babyindexmodule/model/body_request_child.dart';
 import 'package:babyindexmodule/model/child_response.dart';
+import 'package:babyindexmodule/util/app_util.dart';
 import 'package:babyindexmodule/util/logging_interceptor.dart';
+import 'package:babyindexmodule/util/string.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 
 class ChildApiProvider {
   final String _endpoint = "/user/relative/list";
   Dio _dio;
-  String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJndXUudm4iLCJhdWQiOiI4NTgwNjA0MDgyODA2NTEzIiwic3ViIjoiNThlZjM3MTdkMjM5Y2YxNWIzNzUxOTUxIiwiZXhwIjoxNjAyNDg2NTYyfQ.hWPakFEOlGNxdxJFqc4VG-lkShuKXIZ6T7kXl0MOlS8";
+  String _token;
   final String AUTHORIZATION = "Basic ODU4MDYwNDA4MjgwNjUxMzpkYndmZG44NXdrdndyNGdoZWp6a3E4OTNzM210N3J4dA==";
 
   ChildApiProvider() {
@@ -18,8 +21,10 @@ class ChildApiProvider {
   }
 
   Future<ChildResponse> getChild() async {
+    _token = await AppUtil.getGuuToken();
+    debugPrint("Token save: $_token");
     try {
-      var childMap = BodyChild(token, "child").toJson();
+      var childMap = BodyChild(_token, "child").toJson();
       Response response = await _dio.post(_endpoint, data: childMap);
       return ChildResponse.fromJson(response.data);
     } catch (error, stacktrace) {

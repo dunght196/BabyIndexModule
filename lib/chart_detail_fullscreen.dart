@@ -12,7 +12,7 @@ import 'package:mp_chart/mp/core/description.dart';
 import 'package:mp_chart/mp/core/entry/entry.dart';
 import 'package:mp_chart/mp/core/enums/x_axis_position.dart';
 
-import 'app_util.dart';
+import 'util/app_util.dart';
 import 'build_chart_index.dart';
 import 'color_util.dart';
 

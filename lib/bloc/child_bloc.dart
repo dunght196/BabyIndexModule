@@ -7,9 +7,10 @@ class ChildBloc {
   final ChildRepository _repository = ChildRepository();
   final BehaviorSubject<ChildResponse> _subject = BehaviorSubject<ChildResponse>();
 
-  getChild() async {
+  Future<ChildResponse> getChild() async {
     ChildResponse response = await _repository.getChild();
-    _subject.sink.add(response);
+//    _subject.sink.add(response);
+    return response;
   }
 
   dispose() {

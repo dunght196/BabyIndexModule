@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:babyindexmodule/util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -33,12 +35,13 @@ final Color colorComfort = Colors.transparent;
 
 class BuildWonderWeek extends StatefulWidget {
   final Entry markerBaby;
+  final StreamController<Entry> listenUpdateState;
 
-  BuildWonderWeek({Key key, this.markerBaby}) : super(key: key);
+  BuildWonderWeek(this.markerBaby, this.listenUpdateState);
 
   @override
   State<StatefulWidget> createState() {
-    return _BuildWonderWeekState(markerBaby);
+    return _BuildWonderWeekState();
   }
 }
 
@@ -46,10 +49,6 @@ class _BuildWonderWeekState extends State<BuildWonderWeek> {
   BarChartController controllerBarChart;
   ScatterChartController controllerScatterValue;
   ScatterChartController controllerScatterMarker;
-
-  final Entry markerBaby;
-
-  _BuildWonderWeekState(this.markerBaby);
 
   @override
   void initState() {
@@ -59,7 +58,13 @@ class _BuildWonderWeekState extends State<BuildWonderWeek> {
     _initControllerScatterMarker();
     _initBarData();
     _initScatterValueData();
-    _initScatterMarkerData(markerBaby);
+    _initScatterMarkerData(widget.markerBaby);
+
+    widget.listenUpdateState.stream.listen((data){
+      setState(() {
+        _initScatterMarkerData(data);
+      });
+    });
   }
 
   @override
@@ -553,8 +558,6 @@ class _BuildWonderWeekState extends State<BuildWonderWeek> {
     marker10.add(Entry(x: 2.5, y: 2+spaceInsertValue, icon: imgs[0]));
 
     marker11.add(Entry(x: 2, y: 1+spaceInsertValue, icon: imgs[1]));
-
-    print("Marker Baby: ${markerBaby.x}, ${markerBaby.y}");
 
     marker12.add(Entry(x: markerBaby.x, y: markerBaby.y+spaceInsertValue, icon: imgs[2]));
 

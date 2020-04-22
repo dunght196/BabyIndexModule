@@ -1,3 +1,4 @@
+import 'package:babyindexmodule/util/app_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -22,8 +23,7 @@ class _DetailIndexBabyState extends State<DetailIndexBabyScreen> {
   final tftPerimeter = TextEditingController();
   final tftDate = TextEditingController();
 
-  final databaseReference =
-      Firestore.instance.collection('baby').document('cun').collection('date');
+  var databaseReference;
 
   _DetailIndexBabyState(this.indexBaby);
 
@@ -34,6 +34,15 @@ class _DetailIndexBabyState extends State<DetailIndexBabyScreen> {
     tftWeight.text = indexBaby.weight;
     tftPerimeter.text = indexBaby.perimeter;
     tftDate.text = indexBaby.date;
+    initData();
+  }
+
+  initData() async {
+    String guuId = await AppUtil.getGuuId();
+    String relativeId = await AppUtil.getRelativeId();
+    setState(() {
+      databaseReference = Firestore.instance.collection(guuId).document(relativeId).collection('date');
+    });
   }
 
   @override

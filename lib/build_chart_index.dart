@@ -1,5 +1,6 @@
 import 'package:babyindexmodule/table_index_data.dart';
 import 'package:babyindexmodule/util.dart';
+import 'package:babyindexmodule/util/string.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,6 @@ import 'package:mp_chart/mp/core/data_interfaces/i_line_data_set.dart';
 import 'package:mp_chart/mp/core/data_set/line_data_set.dart';
 import 'package:mp_chart/mp/core/description.dart';
 import 'package:mp_chart/mp/core/entry/entry.dart';
-import 'package:mp_chart/mp/core/enums/axis_dependency.dart';
 import 'package:mp_chart/mp/core/enums/x_axis_position.dart';
 import 'package:mp_chart/mp/core/highlight/highlight.dart';
 import 'package:mp_chart/mp/core/marker/i_marker.dart';
@@ -22,9 +22,8 @@ import 'package:mp_chart/mp/core/utils/painter_utils.dart';
 import 'package:mp_chart/mp/core/utils/utils.dart';
 import 'package:mp_chart/mp/core/value_formatter/default_value_formatter.dart';
 import 'package:mp_chart/mp/core/value_formatter/value_formatter.dart';
-import 'package:mp_chart/mp/core/view_port.dart';
 
-import 'app_util.dart';
+import 'util/app_util.dart';
 import 'check_valid_guess_baby.dart';
 import 'color_util.dart';
 import 'model/index_baby.dart';
@@ -65,6 +64,7 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
     initDataIndex();
     _initControllerLineChart();
     _initLineChartData();
+    debugPrint("Set state chart index");
   }
 
   @override
@@ -332,24 +332,19 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
   }
 
   void initDataIndex() {
-//    List<IndexBaby> lsIndexBaby = List();
-//    for(var x in snapShot) {
-//      IndexBaby index = IndexBaby.fromSnapshot(x);
-//      lsIndexBaby.add(index);
-//    }
     List lsIndexBaby = snapShot.map((item) => IndexBaby.fromSnapshot(item)).toList();
 
     bool isDataGuess = false;
     switch(title) {
-      case AppUtil.HEIGHT:
+      case Strings.HEIGHT:
         List check = lsIndexBaby.where((item) => !CheckValidGuessData.isValidGuessBoyHeight(getMonthIndex(item.date), double.parse(item.height))).toList();
         isDataGuess =  (check.length > 0) ? false : true;
         break;
-      case AppUtil.WEIGHT:
+      case Strings.WEIGHT:
         List check = lsIndexBaby.where((item) => !CheckValidGuessData.isValidGuessBoyWeight(getMonthIndex(item.date), double.parse(item.weight))).toList();
         isDataGuess =  (check.length > 0) ? false : true;
         break;
-      case AppUtil.PERIMETER:
+      case Strings.PERIMETER:
         List check = lsIndexBaby.where((item) => !CheckValidGuessData.isValidGuessBoyPerimeter(getMonthIndex(item.date), double.parse(item.perimeter))).toList();
         isDataGuess =  (check.length > 0) ? false : true;
         break;
@@ -359,7 +354,7 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
 
     for(int i=1; i<=lsIndexBaby.length; i++) {
       switch(title) {
-        case AppUtil.HEIGHT:
+        case Strings.HEIGHT:
           var startHeight = double.parse(lsIndexBaby[0].height);
           var lastHeight = double.parse(lsIndexBaby[lsIndexBaby.length-1].height);
           var subHeight = lastHeight - startHeight;
@@ -384,7 +379,7 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
             dataIndex.add(entry);
           }
           break;
-        case AppUtil.WEIGHT:
+        case Strings.WEIGHT:
           var startWeight = double.parse(lsIndexBaby[0].weight);
           var lastWeight = double.parse(lsIndexBaby[lsIndexBaby.length-1].weight);
           var subWeight = lastWeight - startWeight;
@@ -409,7 +404,7 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
             dataIndex.add(entry);
           }
           break;
-        case AppUtil.PERIMETER:
+        case Strings.PERIMETER:
           var startPerimeter = double.parse(lsIndexBaby[0].perimeter);
           var lastPerimeter = double.parse(lsIndexBaby[lsIndexBaby.length-1].perimeter);
           var subPerimeter = lastPerimeter - startPerimeter;
@@ -439,21 +434,21 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
 
     if(dataGuess.isNotEmpty) {
       switch(title) {
-        case AppUtil.HEIGHT:
+        case Strings.HEIGHT:
           dataGuess.add(
               Entry(
                   x: getMonthIndex(lsIndexBaby[lsIndexBaby.length-1].date),
                   y: double.parse(lsIndexBaby[lsIndexBaby.length-1].height))
           );
           break;
-        case AppUtil.WEIGHT:
+        case Strings.WEIGHT:
           dataGuess.add(
               Entry(
                   x: getMonthIndex(lsIndexBaby[lsIndexBaby.length-1].date),
                   y: double.parse(lsIndexBaby[lsIndexBaby.length-1].weight))
           );
           break;
-        case AppUtil.PERIMETER:
+        case Strings.PERIMETER:
           dataGuess.add(
               Entry(
                   x: getMonthIndex(lsIndexBaby[lsIndexBaby.length-1].date),
