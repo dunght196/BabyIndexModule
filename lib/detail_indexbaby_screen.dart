@@ -67,12 +67,12 @@ class _DetailIndexBabyState extends State<DetailIndexBabyScreen> {
           titleSpacing: 0.0,
           title: Text('Cập nhật chỉ số cho bé')),
       body: Stack(
-        children: <Widget>[
+        children: [
           Container(
             width: MediaQuery.of(context).size.width,
             padding: EdgeInsets.fromLTRB(23, 23, 23, 0),
             child: ListView(
-              children: <Widget>[
+              children: [
                 Padding(
                   padding: EdgeInsets.fromLTRB(12, 0, 0, 0),
                   child: Text('Bé'),
@@ -85,7 +85,7 @@ class _DetailIndexBabyState extends State<DetailIndexBabyScreen> {
                       color: Colors.grey[300],
                       borderRadius: BorderRadius.all(Radius.circular(20))),
                   child: Row(
-                    children: <Widget>[
+                    children: [
                       Icon(Icons.accessibility),
                       Padding(
                         padding: const EdgeInsets.only(left: 5),
@@ -120,7 +120,7 @@ class _DetailIndexBabyState extends State<DetailIndexBabyScreen> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Row(
-              children: <Widget>[
+              children: [
                 Expanded(
                   flex: 3,
                   child: GestureDetector(
@@ -244,22 +244,20 @@ class _DetailIndexBabyState extends State<DetailIndexBabyScreen> {
     );
   }
 
-  Future<void> transactionDelete(IndexBaby indexBaby, BuildContext context) async {
+  Future transactionDelete(IndexBaby indexBaby, BuildContext context) async {
     DocumentReference df = databaseReference.document(indexBaby.date);
-    Firestore.instance.runTransaction((Transaction tx) async {
-      await tx.delete(df);
-      Navigator.pop(context);
-    });
+    await df.delete();
+    Navigator.pop(context);
   }
 
-  Future<void> transactionUpdate(IndexBaby indexBaby, BuildContext context) async {
+  Future transactionUpdate(IndexBaby indexBaby, BuildContext context) async {
     var dateOld = indexBaby.date;
     var dateNew = tftDate.text;
-    Firestore.instance.runTransaction((Transaction tx) async {
-      await tx.delete(databaseReference.document(dateOld));
-      IndexBaby mapData = IndexBaby(dateNew, tftHeight.text, tftWeight.text, tftPerimeter.text);
-      await tx.set(databaseReference.document(dateNew), mapData.toJson());
-      Navigator.pop(context);
-    });
+    IndexBaby mapData = IndexBaby(dateNew, tftHeight.text, tftWeight.text, tftPerimeter.text);
+    DocumentReference df = databaseReference.document(dateOld);
+    await df.delete();
+    DocumentReference df1 = databaseReference.document(dateNew);
+    if(mapData != null ) await df1.setData(mapData.toJson());
+    Navigator.pop(context);
   }
 }

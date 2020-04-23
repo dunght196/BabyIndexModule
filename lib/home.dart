@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:babyindexmodule/bloc/child_bloc.dart';
 import 'package:babyindexmodule/model/child_response.dart';
 import 'package:babyindexmodule/state_loading_data.dart';
+import 'package:babyindexmodule/util/route_transition.dart';
 import 'package:babyindexmodule/util/string.dart';
 import 'package:babyindexmodule/wonderweek_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -82,10 +83,7 @@ class _HomeState extends State<Home> {
               padding: const EdgeInsets.only(right: 7),
               child: GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => IndexBabyScreen()));
+                  Navigator.of(context).push(_createRoute(IndexBabyScreen()));
                 },
                 child: Text(
                   'Tất cả chỉ số',
@@ -96,7 +94,6 @@ class _HomeState extends State<Home> {
           )
         ],
       ),
-//      body: isLoading ? BuildLoadingWidget() : _buildHome(),
       body: widgetBuilder(),
     );
   }
@@ -332,8 +329,7 @@ class _HomeState extends State<Home> {
     await databaseReference
         .document(txtDate)
         .setData(mapData.toJson());
-    await Navigator.push(
-        context, MaterialPageRoute(builder: (context) => IndexBabyScreen()));
+    Navigator.of(context).push(_createRoute(IndexBabyScreen()));
   }
 
   Future<Null> _selectDate(BuildContext context) async {
@@ -387,7 +383,6 @@ class _HomeState extends State<Home> {
       if(accesToken != null ) {
         _accessToken = accesToken;
         AppUtil.setGuuToken(_accessToken);
-        debugPrint("Token send: $_accessToken");
       }
     });
   }
@@ -463,3 +458,20 @@ class _HomeState extends State<Home> {
     }
   }
 }
+
+Route _createRoute(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      var begin = Offset(1.0, 0.0);
+      var end = Offset.zero;
+      var curve = Curves.ease;
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: child,
+      );
+    },
+  );
+}
+

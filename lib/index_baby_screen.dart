@@ -1,4 +1,5 @@
 import 'package:babyindexmodule/home.dart';
+import 'package:babyindexmodule/state_loading_data.dart';
 import 'package:babyindexmodule/util/app_util.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -69,7 +70,7 @@ class _IndexBabyState extends State<IndexBabyScreen> {
         StreamBuilder(
           stream: isLoading ? Stream.empty() : databaseReference.collection(_guuId).document(_relativeId).collection('date').snapshots() ,
           builder: (context, snapshot) {
-            if (!snapshot.hasData) return LinearProgressIndicator();
+            if (!snapshot.hasData) return BuildLoadingWidget();
             return _buildList(context, snapshot.data.documents);
           },
         )

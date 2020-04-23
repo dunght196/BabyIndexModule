@@ -22,7 +22,6 @@ class ChildApiProvider {
 
   Future<ChildResponse> getChild() async {
     _token = await AppUtil.getGuuToken();
-    debugPrint("Token save: $_token");
     try {
       var childMap = BodyChild(_token, "child").toJson();
       Response response = await _dio.post(_endpoint, data: childMap);

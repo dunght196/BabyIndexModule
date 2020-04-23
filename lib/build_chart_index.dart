@@ -1,3 +1,4 @@
+import 'package:babyindexmodule/home.dart';
 import 'package:babyindexmodule/table_index_data.dart';
 import 'package:babyindexmodule/util.dart';
 import 'package:babyindexmodule/util/string.dart';
@@ -64,7 +65,6 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
     initDataIndex();
     _initControllerLineChart();
     _initLineChartData();
-    debugPrint("Set state chart index");
   }
 
   @override
@@ -82,10 +82,7 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
                 )),
             GestureDetector(
               onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TableIndexDataScreen()));
+                Navigator.of(context).push(_createRoute(TableIndexDataScreen()));
               },
               child: Padding(
                 padding: const EdgeInsets.only(right: 10),
@@ -162,10 +159,7 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
                           right: BorderSide(color: Colors.grey, width: 1.0))),
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => IndexBabyScreen()));
+                      Navigator.of(context).push(_createRoute(IndexBabyScreen()));
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -183,16 +177,17 @@ class _BuildChartIndexState extends State<BuildChartIndex> {
                   height: 38,
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => ChartDetailFullScreen(
-                                title: title,
-                                dataBelowLine: dataBelowLine,
-                                dataTopLine: dataTopLine,
-                                dataGuess: dataGuess,
-                                dataIndex: dataIndex,
-                              )));
+                      Navigator.of(context).push(
+                          _createRoute(
+                            ChartDetailFullScreen(
+                              title: title,
+                              dataBelowLine: dataBelowLine,
+                              dataTopLine: dataTopLine,
+                              dataGuess: dataGuess,
+                              dataIndex: dataIndex,
+                            )
+                          )
+                      );
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -578,5 +573,20 @@ class FormatDrawValue extends ValueFormatter {
   String getFormattedValue1(double value) {
     return value.toStringAsFixed(1) + _suffix;
   }
+}
 
+Route _createRoute(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      var begin = Offset(1.0, 0.0);
+      var end = Offset.zero;
+      var curve = Curves.ease;
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: child,
+      );
+    },
+  );
 }
